@@ -39,6 +39,8 @@
         }
     }
 
+
+
     function getShader(gl, id) {
         var shaderScript = document.getElementById(id);
         if (!shaderScript) {
@@ -136,26 +138,27 @@
 
 
 
-    var pMatrix = mat4.create();
-    var mvMatrix = mat4.create();
-    function setMatrixUniforms(gl, shaderProgram) {
-        gl.uniformMatrix4fv(shaderProgram.pMatrixUniform, false, pMatrix);
-        gl.uniformMatrix4fv(shaderProgram.mvMatrixUniform, false, mvMatrix);
-    }
-
     function drawScene(gl, shaderProgram, buffers) {
         gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
+        var pMatrix = mat4.create();
         mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0, pMatrix);
 
+        var mvMatrix = mat4.create();
         mat4.identity(mvMatrix);
 
         buffers.forEach(function(buffer) {
             mat4.translate(mvMatrix, buffer.moveVector);
+
             gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+
             gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, buffer.itemSize, gl.FLOAT, false, 0, 0);
-            setMatrixUniforms(gl, shaderProgram);
+
+            // set matrix uniforms
+            gl.uniformMatrix4fv(shaderProgram.pMatrixUniform, false, pMatrix);
+            gl.uniformMatrix4fv(shaderProgram.mvMatrixUniform, false, mvMatrix);
+
             gl.drawArrays(buffer.glDrawMode, 0, buffer.numItems);
         });
     }
