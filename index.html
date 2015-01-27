@@ -27,17 +27,13 @@
 
 
 <script type="text/javascript">
-
-    function initGL(canvas) {
-        try {
-            gl = canvas.getContext("experimental-webgl");
-            gl.viewportWidth = canvas.width;
-            gl.viewportHeight = canvas.height;
-            return gl;
-        } catch (e) {
-            return null;
-        }
+    function initGl(canvas) {
+        var gl = canvas.getContext("experimental-webgl");
+        gl.clearColor(0.0, 0.0, 0.0, 1.0);
+        gl.enable(gl.DEPTH_TEST);
+        return gl;
     }
+
 
 
     function createShader(gl, shaderType, shaderScriptId) {
@@ -104,12 +100,12 @@
 
 
 
-    function drawScene(gl, shaderProgram, buffers) {
-        gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
+    function drawScene(gl, shaderProgram, buffers, viewportWidth, viewportHeight) {
+        gl.viewport(0, 0, viewportWidth, viewportHeight);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
         var pMatrix = mat4.create();
-        mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0, pMatrix);
+        mat4.perspective(45, viewportWidth / viewportHeight, 0.1, 100.0, pMatrix);
         gl.uniformMatrix4fv(shaderProgram.pMatrixUniform, false, pMatrix);
 
         var mvMatrix = mat4.create();
@@ -131,16 +127,15 @@
 
 
     function webGLStart() {
-        var gl = initGL(document.getElementById("lesson01-canvas"));
+        var canvas =  document.getElementById("lesson01-canvas")
+
+        var gl = initGl(canvas);
 
         var shaderProgram = initShaders(gl);
 
         var buffers = initBuffers(gl);
 
-        gl.clearColor(0.0, 0.0, 0.0, 1.0);
-        gl.enable(gl.DEPTH_TEST);
-
-        drawScene(gl, shaderProgram, buffers);
+        drawScene(gl, shaderProgram, buffers, canvas.width, canvas.height);
     }
 </script>
 
