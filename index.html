@@ -53,11 +53,7 @@
 
         gl.useProgram(shaderProgram);
 
-        shaderProgram.vertexPositionAttribute = gl.getAttribLocation(shaderProgram, "aVertexPosition");
-        gl.enableVertexAttribArray(shaderProgram.vertexPositionAttribute);
-
-        shaderProgram.pMatrixUniform = gl.getUniformLocation(shaderProgram, "uPMatrix");
-        shaderProgram.mvMatrixUniform = gl.getUniformLocation(shaderProgram, "uMVMatrix");
+        gl.enableVertexAttribArray(gl.getAttribLocation(shaderProgram, "aVertexPosition"));
 
         return shaderProgram;
     }
@@ -106,7 +102,7 @@
 
         var pMatrix = mat4.create();
         mat4.perspective(45, viewportWidth / viewportHeight, 0.1, 100.0, pMatrix);
-        gl.uniformMatrix4fv(shaderProgram.pMatrixUniform, false, pMatrix);
+        gl.uniformMatrix4fv(gl.getUniformLocation(shaderProgram, "uPMatrix"), false, pMatrix);
 
         var mvMatrix = mat4.create();
         mat4.identity(mvMatrix);
@@ -115,10 +111,10 @@
 
             gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
 
-            gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, buffer.itemSize, gl.FLOAT, false, 0, 0);
+            gl.vertexAttribPointer(gl.getAttribLocation(shaderProgram, "aVertexPosition"), buffer.itemSize, gl.FLOAT, false, 0, 0);
 
             // set matrix uniforms
-            gl.uniformMatrix4fv(shaderProgram.mvMatrixUniform, false, mvMatrix);
+            gl.uniformMatrix4fv(gl.getUniformLocation(shaderProgram, "uMVMatrix"), false, mvMatrix);
 
             gl.drawArrays(buffer.glDrawMode, 0, buffer.numItems);
         });
