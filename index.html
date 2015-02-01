@@ -5,7 +5,7 @@
 <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
 
 <script type="text/javascript" src="glMatrix-0.9.5.min.js"></script>
-
+    
 <script id="shader-fs" type="x-shader/x-fragment">
     precision mediump float;
 
@@ -53,7 +53,7 @@
 
         gl.useProgram(shaderProgram);
 
-        gl.enableVertexAttribArray(gl.getAttribLocation(shaderProgram, "aVertexPosition"));
+        gl.enableVertexAttribArray(gl.getAttribLocation(shaderProgram, "aVertexPosition")); // ???
 
         return shaderProgram;
     }
@@ -76,24 +76,38 @@
     }
 
     function initBuffers(gl) {
-        var triangleVertexPositionBuffer = createArrayBuffer(gl, {
+        var buffers = [];
+
+        buffers.push(createArrayBuffer(gl, {
             itemSize: 3,
             numItems: 3,
             moveVector: [-1.5, 0.0, -7.0],
             glDrawMode: gl.TRIANGLES
-        });
+        }));
         staticDrawArrayBuffer(gl, new Float32Array([
             0.0,  1.0,  0.0,
             -1.0, -1.0,  0.0,
             1.0, -1.0,  0.0
         ]));
 
-        var squareVertexPositionBuffer = createArrayBuffer(gl, {
+        buffers.push(createArrayBuffer(gl, {
+            itemSize: 3,
+            numItems: 3,
+            moveVector: [1.5, 0.0, -7.0],
+            glDrawMode: gl.TRIANGLES
+        }));
+        staticDrawArrayBuffer(gl, new Float32Array([
+            0.0,  1.0,  0.0,
+            -1.0, -1.0,  0.0,
+            1.0, -1.0,  0.0
+        ]));
+
+        buffers.push(createArrayBuffer(gl, {
             itemSize: 3,
             numItems: 4,
-            moveVector: [3.0, 0.0, 0.0],
+            moveVector: [0.0, 0.0, -11.0],
             glDrawMode: gl.TRIANGLE_STRIP
-        });
+        }));
         staticDrawArrayBuffer(gl, new Float32Array([
             1.0,  1.0,  0.0,
             -1.0,  1.0,  0.0,
@@ -101,30 +115,39 @@
             -1.0, -1.0,  0.0
         ]));
 
-        return [triangleVertexPositionBuffer, squareVertexPositionBuffer]; // TODO
+        return buffers;
     }
 
 
+    function uniformMatrix4fv(gl, shaderProgram, uniformName, value) { // writes data into uniform
+        gl.uniformMatrix4fv(gl.getUniformLocation(shaderProgram, uniformName), false, value); // false = no transpose
+    }
 
     function drawScene(gl, shaderProgram, buffers, viewportWidth, viewportHeight) {
+        // set up viewport and clear
         gl.viewport(0, 0, viewportWidth, viewportHeight);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
+        // create perspective matrix and write into uniform
         var pMatrix = mat4.create();
         mat4.perspective(45, viewportWidth / viewportHeight, 0.1, 100.0, pMatrix);
-        gl.uniformMatrix4fv(gl.getUniformLocation(shaderProgram, "uPMatrix"), false, pMatrix);
+        uniformMatrix4fv(gl, shaderProgram, "uPMatrix", pMatrix);
 
-        var mvMatrix = mat4.create();
-        mat4.identity(mvMatrix);
+        // draw buffers
         buffers.forEach(function(buffer) {
-            mat4.translate(mvMatrix, buffer.moveVector);
-
             gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
 
+            // set attrib (???)
             gl.vertexAttribPointer(gl.getAttribLocation(shaderProgram, "aVertexPosition"), buffer.itemSize, gl.FLOAT, false, 0, 0);
 
-            gl.uniformMatrix4fv(gl.getUniformLocation(shaderProgram, "uMVMatrix"), false, mvMatrix);
+            // move model-view matrix to relative location specified by moveVector, write into gl uniform
+            // create model-view matrix
+            var mvMatrix = mat4.create();
+            mat4.identity(mvMatrix);
+            mat4.translate(mvMatrix, buffer.moveVector);
+            uniformMatrix4fv(gl, shaderProgram, "uMVMatrix", mvMatrix);
 
+            // draw buffer
             gl.drawArrays(buffer.glDrawMode, 0, buffer.numItems);
         });
     }
