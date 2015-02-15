@@ -77,10 +77,6 @@
         return b;
     }
 
-    function staticDrawArrayBuffer(gl, a) {
-        gl.bufferData(gl.ARRAY_BUFFER, a, gl.STATIC_DRAW);
-    }
-
     function initBuffers(gl) {
         var buffers = [];
 
@@ -91,21 +87,21 @@
             moveVector: [0.0, 0.0, -20.0],
             glDrawMode: gl.TRIANGLES
         });
-        staticDrawArrayBuffer(gl, new Float32Array([
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
             0.0,  1.0,  0.0,
             -1.0, -1.0,  0.0,
             1.0, -1.0,  0.0
-        ]));
+        ]), gl.STATIC_DRAW);
 
         // color
         var triangleColorBuffer = createArrayBuffer(gl, {
             itemSize: 4
         });
-        staticDrawArrayBuffer(gl, new Float32Array([
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
             1.0, 0.0, 0.0, 1.0,
             0.0, 1.0, 0.0, 1.0,
             0.0, 0.0, 1.0, 1.0
-        ]));
+        ]), gl.STATIC_DRAW);
         
         // dumb obj to contain 2 buffers corresponding to the same triangle
         // still using buffers array for now, will remove if i dont re-add more
