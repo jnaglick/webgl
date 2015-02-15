@@ -1,27 +1,32 @@
 <html>
 
 <head>
-<title>Learning WebGL &mdash; lesson 1</title>
 <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
 
 <script type="text/javascript" src="glMatrix-0.9.5.min.js"></script>
     
 <script id="shader-fs" type="x-shader/x-fragment">
     precision mediump float;
+    
+    varying vec4 vColor;
 
     void main(void) {
-        gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+        gl_FragColor = vColor;
     }
 </script>
 
 <script id="shader-vs" type="x-shader/x-vertex">
     attribute vec3 aVertexPosition;
-
+    attribute vec4 aVertexColor;
+    
     uniform mat4 uMVMatrix;
     uniform mat4 uPMatrix;
+    
+    varying vec4 vColor;
 
     void main(void) {
         gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+        vColor = aVertexColor;
     }
 </script>
 
@@ -53,7 +58,8 @@
 
         gl.useProgram(shaderProgram);
 
-        gl.enableVertexAttribArray(gl.getAttribLocation(shaderProgram, "aVertexPosition")); // ???
+        gl.enableVertexAttribArray(gl.getAttribLocation(shaderProgram, "aVertexPosition"));
+        gl.enableVertexAttribArray(gl.getAttribLocation(shaderProgram, "aVertexColor"));
 
         return shaderProgram;
     }
@@ -78,42 +84,35 @@
     function initBuffers(gl) {
         var buffers = [];
 
-        buffers.push(createArrayBuffer(gl, {
+        // position
+        var trianglePositionBuffer = createArrayBuffer(gl, {
             itemSize: 3,
             numItems: 3,
             moveVector: [-1.5, 0.0, -7.0],
             glDrawMode: gl.TRIANGLES
-        }));
+        });
         staticDrawArrayBuffer(gl, new Float32Array([
             0.0,  1.0,  0.0,
             -1.0, -1.0,  0.0,
             1.0, -1.0,  0.0
         ]));
 
-        buffers.push(createArrayBuffer(gl, {
-            itemSize: 3,
-            numItems: 3,
-            moveVector: [1.5, 0.0, -7.0],
-            glDrawMode: gl.TRIANGLES
-        }));
+        // color
+        var triangleColorBuffer = createArrayBuffer(gl, {
+            itemSize: 4
+        });
         staticDrawArrayBuffer(gl, new Float32Array([
-            0.0,  1.0,  0.0,
-            -1.0, -1.0,  0.0,
-            1.0, -1.0,  0.0
+            1.0, 0.0, 0.0, 1.0,
+            0.0, 1.0, 0.0, 1.0,
+            0.0, 0.0, 1.0, 1.0
         ]));
-
-        buffers.push(createArrayBuffer(gl, {
-            itemSize: 3,
-            numItems: 4,
-            moveVector: [0.0, 0.0, -11.0],
-            glDrawMode: gl.TRIANGLE_STRIP
-        }));
-        staticDrawArrayBuffer(gl, new Float32Array([
-            1.0,  1.0,  0.0,
-            -1.0,  1.0,  0.0,
-            1.0, -1.0,  0.0,
-            -1.0, -1.0,  0.0
-        ]));
+        
+        // dumb obj to contain 2 buffers corresponding to the same triangle
+        // still using buffers array for now, will remove if i dont re-add more
+        buffers.push({
+            position: trianglePositionBuffer,
+            color: triangleColorBuffer
+        });
 
         return buffers;
     }
@@ -135,20 +134,25 @@
 
         // draw buffers
         buffers.forEach(function(buffer) {
-            gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-
-            // set attrib (???)
-            gl.vertexAttribPointer(gl.getAttribLocation(shaderProgram, "aVertexPosition"), buffer.itemSize, gl.FLOAT, false, 0, 0);
-
+            var colorBuffer = buffer.color;
+            // set color attrib
+            gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+            gl.vertexAttribPointer(gl.getAttribLocation(shaderProgram, "aVertexColor"), colorBuffer.itemSize, gl.FLOAT, false, 0, 0);
+           
+            var posBuffer = buffer.position;
+            // set position attrib
+            gl.bindBuffer(gl.ARRAY_BUFFER, posBuffer);
+            gl.vertexAttribPointer(gl.getAttribLocation(shaderProgram, "aVertexPosition"), posBuffer.itemSize, gl.FLOAT, false, 0, 0);
+            
             // move model-view matrix to relative location specified by moveVector, write into gl uniform
             // create model-view matrix
             var mvMatrix = mat4.create();
             mat4.identity(mvMatrix);
-            mat4.translate(mvMatrix, buffer.moveVector);
+            mat4.translate(mvMatrix, posBuffer.moveVector);
             uniformMatrix4fv(gl, shaderProgram, "uMVMatrix", mvMatrix);
 
-            // draw buffer
-            gl.drawArrays(buffer.glDrawMode, 0, buffer.numItems);
+            // draw posBuffer
+            gl.drawArrays(posBuffer.glDrawMode, 0, posBuffer.numItems);
         });
     }
 
