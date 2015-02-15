@@ -1,0 +1,36 @@
+<html>
+	<head>
+		<title>FPS example</title>
+		<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1"/>
+		<script type="text/javascript">
+			function start() {
+				// theres no reason we *need* to use an IIFE to create update(), but it's a nice way to encapsulate scope.
+				// if we want to add more animation functions, we can follow this pattern to keep everything tidy
+				var update = (function() {
+					var fpsCounterElement = document.getElementById("fps"); // better code would specify this as an arg, but this is an example
+					var count = 0;
+					var lastSecond = (new Date()).getSeconds();
+					return function() {
+						var currentSecond = (new Date()).getSeconds();
+						
+						if (lastSecond == currentSecond) { // keep counting
+							count++;
+						} else { // update FPS, reset count
+							fpsCounterElement.textContent = count;
+							lastSecond = currentSecond;
+							count = 0;
+						}
+						
+						requestAnimationFrame(update);
+					}
+				})();
+				
+				update();
+			}
+		</script>
+	</head>
+
+	<body onload="start();">
+		FPS: <span id="fps"></span>
+	</body>
+</html>
