@@ -127,22 +127,23 @@
 
         // draw buffers
         buffers.forEach(function(buffer) {
-            var colorBuffer = buffer.color;
-            // set color attrib
-            gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
-            gl.vertexAttribPointer(gl.getAttribLocation(shaderProgram, "aVertexColor"), colorBuffer.itemSize, gl.FLOAT, false, 0, 0);
-           
             var posBuffer = buffer.position;
-            // set position attrib
-            gl.bindBuffer(gl.ARRAY_BUFFER, posBuffer);
-            gl.vertexAttribPointer(gl.getAttribLocation(shaderProgram, "aVertexPosition"), posBuffer.itemSize, gl.FLOAT, false, 0, 0);
+            var colorBuffer = buffer.color;
             
             // move model-view matrix to relative location specified by moveVector, write into gl uniform
             // create model-view matrix
             var mvMatrix = mat4.create();
             mat4.identity(mvMatrix);
             mat4.translate(mvMatrix, posBuffer.moveVector);
-            gl.uniformMatrix4fv(gl.getUniformLocation(shaderProgram, "uMVMatrix"), false, mvMatrix);
+            gl.uniformMatrix4fv(gl.getUniformLocation(shaderProgram, "uMVMatrix"), false, mvMatrix);            
+         
+            // set color attrib
+            gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+            gl.vertexAttribPointer(gl.getAttribLocation(shaderProgram, "aVertexColor"), colorBuffer.itemSize, gl.FLOAT, false, 0, 0);
+           
+            // set position attrib
+            gl.bindBuffer(gl.ARRAY_BUFFER, posBuffer);
+            gl.vertexAttribPointer(gl.getAttribLocation(shaderProgram, "aVertexPosition"), posBuffer.itemSize, gl.FLOAT, false, 0, 0);
 
             // draw posBuffer
             gl.drawArrays(posBuffer.glDrawMode, 0, posBuffer.numItems);
