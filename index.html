@@ -88,7 +88,7 @@
         var trianglePositionBuffer = createArrayBuffer(gl, {
             itemSize: 3,
             numItems: 3,
-            moveVector: [-1.5, 0.0, -7.0],
+            moveVector: [0.0, 0.0, -20.0],
             glDrawMode: gl.TRIANGLES
         });
         staticDrawArrayBuffer(gl, new Float32Array([
@@ -118,9 +118,6 @@
     }
 
 
-    function uniformMatrix4fv(gl, shaderProgram, uniformName, value) { // writes data into uniform
-        gl.uniformMatrix4fv(gl.getUniformLocation(shaderProgram, uniformName), false, value); // false = no transpose
-    }
 
     function drawScene(gl, shaderProgram, buffers, viewportWidth, viewportHeight) {
         // set up viewport and clear
@@ -129,8 +126,8 @@
 
         // create perspective matrix and write into uniform
         var pMatrix = mat4.create();
-        mat4.perspective(45, viewportWidth / viewportHeight, 0.1, 100.0, pMatrix);
-        uniformMatrix4fv(gl, shaderProgram, "uPMatrix", pMatrix);
+        mat4.perspective(10, viewportWidth / viewportHeight, 0.1, 100.0, pMatrix);
+        gl.uniformMatrix4fv(gl.getUniformLocation(shaderProgram, "uPMatrix"), false, pMatrix);
 
         // draw buffers
         buffers.forEach(function(buffer) {
@@ -149,7 +146,7 @@
             var mvMatrix = mat4.create();
             mat4.identity(mvMatrix);
             mat4.translate(mvMatrix, posBuffer.moveVector);
-            uniformMatrix4fv(gl, shaderProgram, "uMVMatrix", mvMatrix);
+            gl.uniformMatrix4fv(gl.getUniformLocation(shaderProgram, "uMVMatrix"), false, mvMatrix);
 
             // draw posBuffer
             gl.drawArrays(posBuffer.glDrawMode, 0, posBuffer.numItems);
