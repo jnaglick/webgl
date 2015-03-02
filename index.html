@@ -76,11 +76,11 @@
         return b;
     }
 
-    function initBuffers(gl) {
-        var buffers = [];
+    function initFigures(gl) {
+        var figures = [];
 
-        // pyramid position
-        var trianglePositionBuffer = createArrayBuffer(gl, {
+        // triangles position
+        var trianglesPositionBuffer = createArrayBuffer(gl, {
             itemSize: 3,
             numItems: 12,
             glDrawMode: gl.TRIANGLES
@@ -104,8 +104,8 @@
             -1.0, -1.0,  1.0
         ]), gl.STATIC_DRAW);
 
-        // pyramid color
-        var triangleColorBuffer = createArrayBuffer(gl, {
+        // triangles color
+        var trianglesColorBuffer = createArrayBuffer(gl, {
             itemSize: 4
         });
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
@@ -127,13 +127,11 @@
             1.0, 1.0, 0.0, 1.0,
         ]), gl.STATIC_DRAW);
 
-        buffers.push({
-            position: trianglePositionBuffer,
-            color: triangleColorBuffer,
-            translation: [0.0, 0.0, -20.0],
-            rotation: {x: 0, y: 0, z: 0}
-        });
-
+        // triangles buffer obj
+        var trianglesBuffers = {
+            position: trianglesPositionBuffer,
+            color: trianglesColorBuffer
+        };
 
         // bottom square position
         var squarePositionBuffer = createArrayBuffer(gl, {
@@ -158,21 +156,28 @@
              1.0, 1.0, 1.0, 1.0,
              1.0, 1.0, 1.0, 1.0
         ]), gl.STATIC_DRAW);
-        
-        buffers.push({
+
+        // square buffer obj
+        var squareBuffers = {
             position: squarePositionBuffer,
-            color: squareColorBuffer,
+            color: squareColorBuffer
+        };
+
+        // finally, the pyramid figure
+        var pyramidFigure = {
+            buffers: [trianglesBuffers, squareBuffers],
             translation: [0.0, 0.0, -20.0],
             rotation: {x: 0, y: 0, z: 0}
-        });
-        
+        };
 
-        return buffers;
+        figures.push(pyramidFigure);
+
+        return figures;
     }
 
 
 
-    function drawScene(gl, shaderProgram, buffers, viewportWidth, viewportHeight) {
+    function drawScene(gl, shaderProgram, figures, viewportWidth, viewportHeight) {
         // set up viewport and clear
         gl.viewport(0, 0, viewportWidth, viewportHeight);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -182,37 +187,39 @@
         mat4.perspective(10, viewportWidth / viewportHeight, 0.1, 100.0, pMatrix);
         gl.uniformMatrix4fv(gl.getUniformLocation(shaderProgram, "uPMatrix"), false, pMatrix);
 
-        // draw buffers
-        buffers.forEach(function(buffer) {
-            // create mv matrix, apply translation and rotation, set mv uniform
+        // draw figures
+        figures.forEach(function(figure) {
+            // create mv matrix, apply translation and rotation of figure, set mv uniform
             var mvMatrix = mat4.create();
             mat4.identity(mvMatrix);
-            mat4.translate(mvMatrix, buffer.translation);
-            mat4.rotateX(mvMatrix, buffer.rotation.x * Math.PI/180);
-            mat4.rotateY(mvMatrix, buffer.rotation.y * Math.PI/180);
-            mat4.rotateZ(mvMatrix, buffer.rotation.z * Math.PI/180);
-            gl.uniformMatrix4fv(gl.getUniformLocation(shaderProgram, "uMVMatrix"), false, mvMatrix);            
-         
-            // set color attrib
-            var color = buffer.color;
-            gl.bindBuffer(gl.ARRAY_BUFFER, color);
-            gl.vertexAttribPointer(gl.getAttribLocation(shaderProgram, "aVertexColor"), color.itemSize, gl.FLOAT, false, 0, 0);
-           
-            // set position attrib
-            var position = buffer.position;
-            gl.bindBuffer(gl.ARRAY_BUFFER, position);
-            gl.vertexAttribPointer(gl.getAttribLocation(shaderProgram, "aVertexPosition"), position.itemSize, gl.FLOAT, false, 0, 0);
+            mat4.translate(mvMatrix, figure.translation);
+            mat4.rotateX(mvMatrix, figure.rotation.x * Math.PI/180);
+            mat4.rotateY(mvMatrix, figure.rotation.y * Math.PI/180);
+            mat4.rotateZ(mvMatrix, figure.rotation.z * Math.PI/180);
+            gl.uniformMatrix4fv(gl.getUniformLocation(shaderProgram, "uMVMatrix"), false, mvMatrix);
 
-            // draw
-            gl.drawArrays(position.glDrawMode, 0, position.numItems);
+            figure.buffers.forEach(function(buffer) {
+                // set color attrib
+                var color = buffer.color;
+                gl.bindBuffer(gl.ARRAY_BUFFER, color);
+                gl.vertexAttribPointer(gl.getAttribLocation(shaderProgram, "aVertexColor"), color.itemSize, gl.FLOAT, false, 0, 0);
+               
+                // set position attrib
+                var position = buffer.position;
+                gl.bindBuffer(gl.ARRAY_BUFFER, position);
+                gl.vertexAttribPointer(gl.getAttribLocation(shaderProgram, "aVertexPosition"), position.itemSize, gl.FLOAT, false, 0, 0);
+
+                // draw
+                gl.drawArrays(position.glDrawMode, 0, position.numItems);
+            });
         });
     }
 
-    function animateScene(buffers) {
-        buffers.forEach(function(buffer) {
-            buffer.rotation.x = buffer.rotation.x == 360 ? 0 : buffer.rotation.x + 1;
-            buffer.rotation.y = buffer.rotation.y == 360 ? 0 : buffer.rotation.y + 1;
-            buffer.rotation.z = buffer.rotation.z == 360 ? 0 : buffer.rotation.z + 2;
+    function animateScene(figures) {
+        figures.forEach(function(figure) {
+            figure.rotation.x = figure.rotation.x == 360 ? 0 : figure.rotation.x + 1;
+            figure.rotation.y = figure.rotation.y == 360 ? 0 : figure.rotation.y + 1;
+            figure.rotation.z = figure.rotation.z == 360 ? 0 : figure.rotation.z + 1;
         });
     }
 
@@ -220,10 +227,10 @@
         var canvas =  document.getElementById("c");
         var gl = initGl(canvas);
         var shaderProgram = initShaders(gl);
-        var buffers = initBuffers(gl);
+        var figures = initFigures(gl);
         return function() { // return function to update scene
-            animateScene(buffers);
-            drawScene(gl, shaderProgram, buffers, canvas.width, canvas.height);
+            animateScene(figures);
+            drawScene(gl, shaderProgram, figures, canvas.width, canvas.height);
         };
     }
 
