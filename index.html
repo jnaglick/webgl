@@ -80,7 +80,7 @@
         gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);        
     }
 
-    function createPyramidFigure(gl, translation, rotation) {
+    function createPyramidFigure(gl, translation, rotation, animateFn) {
         // triangles position
         var trianglesPositionBuffer = createArrayBuffer(gl, {
             itemSize: 3,
@@ -169,18 +169,29 @@
         return {
             buffers: [trianglesBuffers, squareBuffers],
             translation: translation,
-            rotation: rotation
+            rotation: rotation,
+            animate: animateFn
         };
     }
 
     function initFigures(gl) {
         var figures = [];
 
-        figures.push(createPyramidFigure(gl, [5.0, 0.0, -70.0], {x: 0, y: 0, z: 0}));
-        figures.push(createPyramidFigure(gl, [2.5, 0.0, -70.0], {x: 0, y: 0, z: 0}));
-        figures.push(createPyramidFigure(gl, [0.0, 0.0, -70.0], {x: 0, y: 0, z: 0}));
-        figures.push(createPyramidFigure(gl, [-2.5, 0.0, -70.0], {x: 0, y: 0, z: 0}));
-        figures.push(createPyramidFigure(gl, [-5.0, 0.0, -70.0], {x: 0, y: 0, z: 0}));
+        animateX = function() {
+            this.rotation.x = this.rotation.x == 360 ? 0 : this.rotation.x + 1;
+        };
+        animateY = function() {
+            this.rotation.y = this.rotation.y == 360 ? 0 : this.rotation.y + 1;
+        };
+        animateZ = function() {
+            this.rotation.z = this.rotation.z == 360 ? 0 : this.rotation.z + 1;
+        };
+
+        figures.push(createPyramidFigure(gl, [5.0, 0.0, -70.0], {x: 0, y: 0, z: 0}, animateX));
+        figures.push(createPyramidFigure(gl, [2.5, 0.0, -70.0], {x: 0, y: 0, z: 0}, animateY));
+        figures.push(createPyramidFigure(gl, [0.0, 0.0, -70.0], {x: 0, y: 0, z: 0}, animateZ));
+        figures.push(createPyramidFigure(gl, [-2.5, 0.0, -70.0], {x: 0, y: 0, z: 0}, animateY));
+        figures.push(createPyramidFigure(gl, [-5.0, 0.0, -70.0], {x: 0, y: 0, z: 0}, animateX));
 
         return figures;
     }
@@ -227,10 +238,8 @@
     }
 
     function animateScene(figures) {
-        figures.forEach(function(figure) {
-            figure.rotation.x = figure.rotation.x == 360 ? 0 : figure.rotation.x + 1;
-            figure.rotation.y = figure.rotation.y == 360 ? 0 : figure.rotation.y + 1;
-            figure.rotation.z = figure.rotation.z == 360 ? 0 : figure.rotation.z + 1;
+        figures.forEach(function(figure) { 
+            figure.animate();
         });
     }
 
