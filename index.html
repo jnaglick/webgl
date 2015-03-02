@@ -67,13 +67,17 @@
 
     function createArrayBuffer(gl, options) {
         var b = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, b);
         if (typeof options !== 'undefined') { // copy properties from options to b
             Object.keys(options).forEach(function(k) {
                 b[k] = options[k];
             });
         }
         return b;
+    }
+
+    function setArrayBufferData(gl, buffer, data) {
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+        gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);        
     }
 
     function createPyramidFigure(gl, translation, rotation) {
@@ -83,7 +87,7 @@
             numItems: 12,
             glDrawMode: gl.TRIANGLES
         });
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+        setArrayBufferData(gl, trianglesPositionBuffer, new Float32Array([
             // Front face
              0.0,  1.0,  0.0,
             -1.0, -1.0,  1.0,
@@ -100,13 +104,13 @@
              0.0,  1.0,  0.0,
             -1.0, -1.0, -1.0,
             -1.0, -1.0,  1.0
-        ]), gl.STATIC_DRAW);
+        ]));
 
         // triangles color
         var trianglesColorBuffer = createArrayBuffer(gl, {
             itemSize: 4
         });
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+        setArrayBufferData(gl, trianglesColorBuffer, new Float32Array([
             // Front face
             1.0, 0.0, 0.0, 1.0,
             1.0, 0.0, 0.0, 1.0,
@@ -123,7 +127,7 @@
             1.0, 1.0, 0.0, 1.0,
             1.0, 1.0, 0.0, 1.0,
             1.0, 1.0, 0.0, 1.0,
-        ]), gl.STATIC_DRAW);
+        ]));
 
         // triangles buffer obj
         var trianglesBuffers = {
@@ -137,23 +141,23 @@
             numItems: 4,
             glDrawMode: gl.TRIANGLE_STRIP
         });
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+        setArrayBufferData(gl, squarePositionBuffer, new Float32Array([
             -1.0, -1.0,  -1.0,
              1.0, -1.0,  -1.0,
             -1.0, -1.0,  1.0,
              1.0, -1.0,  1.0,
-        ]), gl.STATIC_DRAW);
+        ]));
 
         // bottom square color
         var squareColorBuffer = createArrayBuffer(gl, {
             itemSize: 4
         });
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+        setArrayBufferData(gl, squareColorBuffer, new Float32Array([
              1.0, 1.0, 1.0, 1.0,
              1.0, 1.0, 1.0, 1.0,
              1.0, 1.0, 1.0, 1.0,
              1.0, 1.0, 1.0, 1.0
-        ]), gl.STATIC_DRAW);
+        ]));
 
         // square buffer obj
         var squareBuffers = {
@@ -204,6 +208,7 @@
             mat4.rotateZ(mvMatrix, figure.rotation.z * Math.PI/180);
             gl.uniformMatrix4fv(gl.getUniformLocation(shaderProgram, "uMVMatrix"), false, mvMatrix);
 
+            // draw buffers
             figure.buffers.forEach(function(buffer) {
                 // set color attrib
                 var color = buffer.color;
