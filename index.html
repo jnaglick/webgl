@@ -76,9 +76,7 @@
         return b;
     }
 
-    function initFigures(gl) {
-        var figures = [];
-
+    function createPyramidFigure(gl, translation, rotation) {
         // triangles position
         var trianglesPositionBuffer = createArrayBuffer(gl, {
             itemSize: 3,
@@ -164,13 +162,21 @@
         };
 
         // finally, the pyramid figure
-        var pyramidFigure = {
+        return {
             buffers: [trianglesBuffers, squareBuffers],
-            translation: [0.0, 0.0, -20.0],
-            rotation: {x: 0, y: 0, z: 0}
+            translation: translation,
+            rotation: rotation
         };
+    }
 
-        figures.push(pyramidFigure);
+    function initFigures(gl) {
+        var figures = [];
+
+        figures.push(createPyramidFigure(gl, [5.0, 0.0, -70.0], {x: 0, y: 0, z: 0}));
+        figures.push(createPyramidFigure(gl, [2.5, 0.0, -70.0], {x: 0, y: 0, z: 0}));
+        figures.push(createPyramidFigure(gl, [0.0, 0.0, -70.0], {x: 0, y: 0, z: 0}));
+        figures.push(createPyramidFigure(gl, [-2.5, 0.0, -70.0], {x: 0, y: 0, z: 0}));
+        figures.push(createPyramidFigure(gl, [-5.0, 0.0, -70.0], {x: 0, y: 0, z: 0}));
 
         return figures;
     }
